@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custodian API Mock Driver</title>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            width: 500px; /* Increased width for better layout */
+            padding: 16px;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; margin-bottom: 4px; font-weight: 500; color: #374151; }
+        .input-group input[type="text"], .input-group input[type="url"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-sizing: border-box;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .input-group input[type="text"]:focus, .input-group input[type="url"]:focus {
+            border-color: #2563eb;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.15s ease-in-out;
+        }
+        .btn-primary { background-color: #2563eb; color: white; border: none; }
+        .btn-primary:hover { background-color: #1d4ed8; }
+        .btn-secondary { background-color: #6b7280; color: white; border: none; }
+        .btn-secondary:hover { background-color: #4b5563; }
+        .btn-danger { background-color: #dc2626; color: white; border: none; }
+        .btn-danger:hover { background-color: #b91c1c; }
+        .header-item, .override-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        .header-item input, .override-item input { flex-grow: 1; }
+        .section-title { font-size: 1.125rem; font-weight: 600; margin-top: 16px; margin-bottom: 8px; color: #1f2937; }
+        .toggle-switch { display: flex; align-items: center; margin-bottom: 12px; }
+        .toggle-switch label { margin-right: 8px; }
+        .toggle-switch input[type="checkbox"] {
+            height: 1.25rem;
+            width: 2.25rem;
+            appearance: none;
+            background-color: #d1d5db;
+            border-radius: 9999px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .toggle-switch input[type="checkbox"]::before {
+            content: "";
+            position: absolute;
+            height: 1rem;
+            width: 1rem;
+            background-color: white;
+            border-radius: 9999px;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s ease-in-out;
+        }
+        .toggle-switch input[type="checkbox"]:checked {
+            background-color: #2563eb;
+        }
+        .toggle-switch input[type="checkbox"]:checked::before {
+            transform: translateX(1rem);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-center mb-6 text-gray-800">Custodian API Mock Driver</h1>
+
+        <div class="toggle-switch">
+            <label for="extensionEnabled" class="font-medium text-gray-700">Enable Extension:</label>
+            <input type="checkbox" id="extensionEnabled" checked>
+        </div>
+
+        <div class="input-group">
+            <label for="targetUrl" class="text-gray-700">Target GraphQL URL:</label>
+            <input type="url" id="targetUrl" placeholder="[https://api.example.com/graphql](https://api.example.com/graphql)" class="mt-1">
+        </div>
+
+        <div>
+            <h2 class="section-title text-gray-700">Common Headers</h2>
+            <div id="commonHeadersContainer">
+                </div>
+            <button id="addCommonHeader" class="btn btn-secondary mt-2 text-sm">Add Common Header</button>
+        </div>
+
+        <div>
+            <h2 class="section-title text-gray-700">GraphQL Operation Overrides</h2>
+            <div id="operationOverridesContainer">
+                </div>
+            <button id="addOperationOverride" class="btn btn-secondary mt-2 text-sm">Add Operation Override</button>
+        </div>
+
+        <button id="saveSettings" class="btn btn-primary w-full mt-6">Save Settings</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

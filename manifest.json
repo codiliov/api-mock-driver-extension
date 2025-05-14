@@ -1,0 +1,30 @@
+{
+    "manifest_version": 3,
+    "name": "Custodian API Mock Driver",
+    "version": "0.1.0",
+    "description": "Injects custom HTTP headers into specific GraphQL requests for API mocking.",
+    "permissions": [
+      "storage", 
+      "webRequest", 
+      "activeTab" 
+    ],
+    "host_permissions": [
+      "<all_urls>" 
+    ],
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+      }
+    },
+    "background": {
+      "service_worker": "background.js"
+    },
+    "icons": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  }
