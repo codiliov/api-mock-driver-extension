@@ -4,114 +4,119 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Custodian API Mock Driver</title>
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <link href="./lib/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        /* General body styles and custom classes not provided by Bootstrap by default */
         body {
-            font-family: 'Inter', sans-serif;
-            width: 500px; /* Increased width for better layout */
-            padding: 16px;
-            background-color: #f3f4f6; /* Light gray background */
+            font-family: sans-serif; /* Bootstrap's default font-family */
+            width: 700px; /* Increased width for more horizontal space */
+            padding: 20px; /* Increased padding */
+            background-color: #f8f9fa; /* Light gray background, typical Bootstrap shade */
         }
-        .input-group { margin-bottom: 12px; }
-        .input-group label { display: block; margin-bottom: 4px; font-weight: 500; color: #374151; }
-        .input-group input[type="text"], .input-group input[type="url"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            box-sizing: border-box;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        .section-title {
+            font-size: 1.25rem; /* h5 equivalent */
+            font-weight: 600; /* semi-bold */
+            margin-top: 28px;
+            margin-bottom: 16px;
+            color: #343a40; /* dark gray */
         }
-        .input-group input[type="text"]:focus, .input-group input[type="url"]:focus {
-            border-color: #2563eb;
-            outline: 0;
-            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        .error-message {
+            color: #dc3545; /* Bootstrap's danger color */
+            font-size: 0.875rem; /* small text */
+            margin-top: 0.25rem;
         }
-        .btn {
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.15s ease-in-out;
-        }
-        .btn-primary { background-color: #2563eb; color: white; border: none; }
-        .btn-primary:hover { background-color: #1d4ed8; }
-        .btn-secondary { background-color: #6b7280; color: white; border: none; }
-        .btn-secondary:hover { background-color: #4b5563; }
-        .btn-danger { background-color: #dc2626; color: white; border: none; }
-        .btn-danger:hover { background-color: #b91c1c; }
-        .header-item, .override-item {
+
+        /* Custom toggle switch styling (Bootstrap doesn't have an exact equivalent out of the box for this specific visual) */
+        .toggle-switch {
             display: flex;
-            gap: 8px;
             align-items: center;
-            margin-bottom: 8px;
-            padding: 8px;
-            background-color: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
+            margin-bottom: 20px;
         }
-        .header-item input, .override-item input { flex-grow: 1; }
-        .section-title { font-size: 1.125rem; font-weight: 600; margin-top: 16px; margin-bottom: 8px; color: #1f2937; }
-        .toggle-switch { display: flex; align-items: center; margin-bottom: 12px; }
-        .toggle-switch label { margin-right: 8px; }
-        .toggle-switch input[type="checkbox"] {
-            height: 1.25rem;
-            width: 2.25rem;
+        .toggle-switch label {
+            margin-right: 16px;
+            font-weight: 600;
+            color: #343a40;
+        }
+        .toggle-checkbox {
             appearance: none;
-            background-color: #d1d5db;
-            border-radius: 9999px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 48px; /* Slightly wider */
+            height: 28px; /* Slightly taller */
+            background-color: #adb5bd; /* Gray for off state */
+            border-radius: 14px; /* Half of height for rounded capsule */
             position: relative;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out;
+            outline: none;
         }
-        .toggle-switch input[type="checkbox"]::before {
-            content: "";
+        .toggle-checkbox:checked {
+            background-color: #0d6efd; /* Bootstrap primary blue for on state */
+        }
+        .toggle-checkbox::before {
+            content: '';
             position: absolute;
-            height: 1rem;
-            width: 1rem;
+            top: 3px; /* Center vertically */
+            left: 3px; /* Initial position */
+            width: 22px; /* Circle size */
+            height: 22px; /* Circle size */
             background-color: white;
-            border-radius: 9999px;
-            top: 2px;
-            left: 2px;
-            transition: transform 0.2s ease-in-out;
+            border-radius: 50%;
+            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Soft shadow */
         }
-        .toggle-switch input[type="checkbox"]:checked {
-            background-color: #2563eb;
+        .toggle-checkbox:checked::before {
+            transform: translateX(20px); /* Move to the right */
         }
-        .toggle-switch input[type="checkbox"]:checked::before {
-            transform: translateX(1rem);
+        .toggle-checkbox:focus {
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Bootstrap-like focus ring */
+        }
+
+        /* Custom styling for key-value pair inputs to ensure consistent appearance */
+        .key-value-item input {
+             flex: 1; /* Bootstrap input-group inputs usually handle this, but for custom layout */
+             margin-right: 0.5rem; /* Add some space between inputs */
+        }
+        .key-value-item input:last-of-type {
+            margin-right: 0; /* No margin on the last input before the button */
         }
     </style>
 </head>
-<body class="bg-gray-100 p-4">
-    <div class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h1 class="text-2xl font-bold text-center mb-6 text-gray-800">Custodian API Mock Driver</h1>
+<body class="bg-light">
+    <div class="container bg-white p-4 rounded shadow-lg my-4">
+        <h1 class="text-center mb-4 text-dark fs-3 fw-bold">REST API Mock Driver</h1>
 
+        <div class="mb-3">
+            <label for="targetUrl" class="form-label text-dark">Target GraphQL Server:</label>
+            <input type="url" id="targetUrl" class="form-control" placeholder="https://api.example.com/graphql">
+            <p id="targetUrlError" class="error-message hidden">Please enter a valid URL.</p>
+        </div>
+
+        <h2 class="section-title">Restrict to Specific Tab URLs</h2>
         <div class="toggle-switch">
-            <label for="extensionEnabled" class="font-medium text-gray-700">Enable Extension:</label>
-            <input type="checkbox" id="extensionEnabled" checked>
+            <label for="restrictToTabUrlsEnabled" class="form-label">Enable Restriction:</label>
+            <input type="checkbox" id="restrictToTabUrlsEnabled" class="toggle-checkbox">
+        </div>
+        <div class="mb-3">
+            <label for="tabUrlPatterns" class="form-label text-dark">Allowed Tab URLs (one per line):</label>
+            <textarea id="tabUrlPatterns" rows="6" class="form-control" placeholder="https://*.atbprosper.com*&#10;https://my-saas.com/app/*&#10;example.com"></textarea>
+            <p id="tabUrlPatternsError" class="error-message hidden">Some URLs are invalid or patterns are malformed.</p>
         </div>
 
-        <div class="input-group">
-            <label for="targetUrl" class="text-gray-700">Target GraphQL URL:</label>
-            <input type="url" id="targetUrl" placeholder="[https://api.example.com/graphql](https://api.example.com/graphql)" class="mt-1">
+        <h2 class="section-title">x-ov-mock Header Configuration</h2>
+        <div class="mb-3">
+            <label for="mockHeaderSuffix" class="form-label text-dark">x-ov-mock-</label>
+            <input type="text" id="mockHeaderSuffix" class="form-control" placeholder="atb-demo (e.g, for x-ov-mock-atb-demo)">
         </div>
 
-        <div>
-            <h2 class="section-title text-gray-700">Common Headers</h2>
-            <div id="commonHeadersContainer">
-                </div>
-            <button id="addCommonHeader" class="btn btn-secondary mt-2 text-sm">Add Common Header</button>
+        <h3 class="font-weight-bold text-dark mb-3 fs-6">Key/Value Pairs for x-ov-mock Header Value:</h3>
+        <div id="mockHeaderKeyValuePairsContainer" class="border p-3 rounded bg-light mb-3">
+            <p class="text-muted small fst-italic" id="noKeyValuePairsMessage">Add key-value pairs below.</p>
         </div>
+        <button id="addKeyValuePair" class="btn btn-secondary btn-sm">Add Header Value Key / Value Pair</button>
+        <p id="keyValuePairsError" class="error-message hidden">All keys must be unique, non-empty, and contain only alphanumeric, hyphens, or underscores.</p>
 
-        <div>
-            <h2 class="section-title text-gray-700">GraphQL Operation Overrides</h2>
-            <div id="operationOverridesContainer">
-                </div>
-            <button id="addOperationOverride" class="btn btn-secondary mt-2 text-sm">Add Operation Override</button>
-        </div>
-
-        <button id="saveSettings" class="btn btn-primary w-full mt-6">Save Settings</button>
+        <button id="saveSettings" class="btn btn-primary w-100 mt-4 py-3">Save Settings</button>
     </div>
 
     <script src="popup.js"></script>
