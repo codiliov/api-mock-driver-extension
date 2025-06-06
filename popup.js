@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // const extensionEnabledCheckbox = document.getElementById('extensionEnabled'); // Removed
     const targetUrlInput = document.getElementById('targetUrl');
     const targetUrlError = document.getElementById('targetUrlError');
+    const httpMethodInput = document.getElementById('httpMethod');
+    const httpMethodDropdown = document.getElementById('httpMethodDropdown');
     const restrictToTabUrlsEnabledCheckbox = document.getElementById('restrictToTabUrlsEnabled');
     const tabUrlPatternsTextarea = document.getElementById('tabUrlPatterns');
     const tabUrlPatternsError = document.getElementById('tabUrlPatternsError');
@@ -17,6 +19,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const MOCK_HEADER_PREFIX = "x-ov-mock";
     let mockHeaderKeyValuePairs = []; // To store current state of K/V pairs in UI
 
+    // Define predefined API paths for the dropdown
+    const API_PATHS = [
+        { value: '', label: 'Select API Path...' },
+        { value: 'dashboard/account', label: 'Account' },
+        { value: 'dashboard/balanceHistory/account', label: 'Account Balance History' },
+        { value: 'dashboard/accounts', label: 'Accounts' },
+        { value: 'dashboard/bankAccount', label: 'Bank Account' },
+        { value: 'dashboard/beneficiaries', label: 'Beneficiaries' },
+        { value: 'dashboard/balanceHistory/client', label: 'Client Balance History' },
+        { value: 'dashboard/CommunicationPreference', label: 'Communication Prefs' },
+        { value: 'dashboard/transactions/pac', label: 'Deposit Transfers' },
+        { value: 'dashboard/documentNotifications', label: 'Document Notifications' },
+        { value: 'dashboard/documents', label: 'Documents' },
+        { value: 'profiles/fund/info', label: 'Fund Info' },
+        { value: 'dashboard/holdings', label: 'Holdings' },
+        { value: 'profiles/risk/answers', label: 'Risk Answers' },
+        { value: 'profiles/user/roles', label: 'Roles' },
+        { value: 'dashboard/transactions/summary', label: 'Transaction Summary' },
+        { value: 'dashboard/transactions', label: 'Transactions' },
+        { value: 'profiles/user/CommunicationPreference', label: 'User Communication Prefs' },
+        { value: 'custom', label: 'Custom API Path...' }
+    ];
+
     // --- Initial Setup ---
     initialErrors(); // Hide all error messages on load
     loadSettings();
@@ -26,6 +51,16 @@ document.addEventListener('DOMContentLoaded', () => {
     addKeyValuePairButton.addEventListener('click', () => addKeyValuePairRow());
     saveSettingsButton.addEventListener('click', saveAllSettings);
     restrictToTabUrlsEnabledCheckbox.addEventListener('change', toggleTabUrlPatternsVisibility);
+
+    // --- HTTP Method Dropdown Handling ---
+    document.querySelectorAll('[data-method]').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const method = e.target.getAttribute('data-method');
+            httpMethodInput.value = method;
+            httpMethodDropdown.textContent = method.toUpperCase();
+        });
+    });
 
     // --- Functions ---
 
@@ -46,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const settings = result.settingsV1 || {
                 // isEnabled: true, // Removed
                 targetUrl: '',
+                httpMethod: 'post', // Default to POST
                 restrictToTabUrlsEnabled: false,
                 tabUrlPatterns: '', // Stored as newline-separated string
                 mockHeaderSuffix: '',
@@ -54,6 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // extensionEnabledCheckbox.checked = settings.isEnabled; // Removed
             targetUrlInput.value = settings.targetUrl;
+            httpMethodInput.value = settings.httpMethod || 'post';
+            httpMethodDropdown.textContent = settings.httpMethod ? settings.httpMethod.toUpperCase() : 'POST';
             restrictToTabUrlsEnabledCheckbox.checked = settings.restrictToTabUrlsEnabled;
             tabUrlPatternsTextarea.value = settings.tabUrlPatterns || '';
             mockHeaderSuffixInput.value = settings.mockHeaderSuffix || '';
@@ -99,7 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     function validateInputs() {
         let isValid = true;
         initialErrors(); // Hide all errors at start of validation
@@ -130,19 +167,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Validate Key/Value pairs (uniqueness, non-empty key, valid key characters)
+        // Validate Key/Value pairs (uniqueness, non-empty key)
         const keys = new Set();
         let hasDuplicateKey = false;
         let hasEmptyKey = false;
-        let hasInvalidKeyChar = false;
-        const validKeyCharRegex = /^[a-zA-Z0-9_-]+$/; // Alphanumeric, hyphen, underscore
 
         mockHeaderKeyValuePairs.forEach(pair => {
-            const key = pair.keyInput.value.trim();
+            const key = getKeyValue(pair.keyInput);
             if (key === '') {
                 hasEmptyKey = true;
-            } else if (!validKeyCharRegex.test(key)) {
-                hasInvalidKeyChar = true;
             }
             if (keys.has(key) && key !== '') { // Check for duplicates only if key is not empty
                 hasDuplicateKey = true;
@@ -150,11 +183,10 @@ document.addEventListener('DOMContentLoaded', () => {
             keys.add(key);
         });
 
-        if (hasEmptyKey || hasDuplicateKey || hasInvalidKeyChar) {
+        if (hasEmptyKey || hasDuplicateKey) {
             let errorMessage = 'Key/Value Pair Errors: ';
-            if (hasEmptyKey) errorMessage += 'All keys must be non-empty. ';
-            if (hasDuplicateKey) errorMessage += 'All keys must be unique. ';
-            if (hasInvalidKeyChar) errorMessage += 'Keys can only contain alphanumeric characters, hyphens (-), and underscores (_). ';
+            if (hasEmptyKey) errorMessage += 'All API paths must be selected. ';
+            if (hasDuplicateKey) errorMessage += 'All API paths must be unique. ';
             keyValuePairsError.textContent = errorMessage.trim();
             keyValuePairsError.classList.remove('hidden');
             isValid = false;
@@ -165,18 +197,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function formatXMockHeaderName(suffix) {
         if (!suffix || suffix.trim() === '') {
-            return MOCK_HEADER_PREFIX;
+            return MOCK_HEADER_PREFIX.toLowerCase();
         }
-        const cleanSuffix = suffix.trim();
+        const cleanSuffix = suffix.trim().toLowerCase(); // Ensure suffix is lowercase
         // Add hyphen only if suffix is not empty AND doesn't start with a hyphen
-        return MOCK_HEADER_PREFIX + (cleanSuffix && !cleanSuffix.startsWith('-') ? '-' : '') + cleanSuffix;
+        const headerName = MOCK_HEADER_PREFIX + (cleanSuffix && !cleanSuffix.startsWith('-') ? '-' : '') + cleanSuffix;
+        return headerName.toLowerCase(); // Ensure entire header name is lowercase
     }
 
     function formatXMockHeaderValue(pairs) {
-        return pairs
-            .filter(pair => pair.keyInput.value.trim() !== '') // Only include pairs with non-empty keys
-            .map(pair => `${pair.keyInput.value.trim()}=${pair.valueInput.value.trim()}`)
-            .join(';');
+        const formattedPairs = pairs
+            .filter(pair => getKeyValue(pair.keyInput) !== '') // Only include pairs with non-empty keys
+            .map(pair => {
+                const apiPath = getKeyValue(pair.keyInput);
+                let mockInstruction = pair.valueInput.value.trim();
+                
+                // Transform status= to code= for server compatibility
+                mockInstruction = mockInstruction.replace(/\bstatus\s*=/gi, 'code=');
+                
+                // Format as: API_PATH | Prefer MOCK_INSTRUCTIONS
+                return `${apiPath} | Prefer ${mockInstruction}`;
+            })
+            .join(' ::: '); // Use conspicuous triple colon separator with spaces
+        
+        return formattedPairs;
     }
 
     async function saveAllSettings() {
@@ -190,11 +234,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const settings = {
             // isEnabled: true, // No longer from UI, assumed enabled if extension is active
             targetUrl: targetUrlInput.value.trim(),
+            httpMethod: httpMethodInput.value,
             restrictToTabUrlsEnabled: restrictToTabUrlsEnabledCheckbox.checked,
             tabUrlPatterns: tabUrlPatternsTextarea.value.trim(), // Store as raw string
             mockHeaderSuffix: mockHeaderSuffixInput.value.trim(),
             mockHeaderKeyValuePairs: mockHeaderKeyValuePairs.map(pair => ({
-                key: pair.keyInput.value.trim(),
+                key: getKeyValue(pair.keyInput),
                 value: pair.valueInput.value.trim()
             }))
         };
@@ -222,14 +267,93 @@ document.addEventListener('DOMContentLoaded', () => {
         input.type = 'text';
         input.placeholder = placeholder;
         input.value = value;
-        input.className = `p-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-base ${className}`;
+        input.className = `form-control ${className}`;
         return input;
+    }
+
+    function createApiPathSelect(selectedValue = '', className = '') {
+        const select = document.createElement('select');
+        select.className = `form-select ${className}`;
+        
+        // Add all predefined options
+        API_PATHS.forEach(path => {
+            const option = document.createElement('option');
+            option.value = path.value;
+            option.textContent = path.label;
+            if (path.value === selectedValue) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+
+        // Create custom input (initially hidden)
+        const customInput = document.createElement('input');
+        customInput.type = 'text';
+        customInput.placeholder = 'Enter custom API path...';
+        customInput.className = `form-control ${className} hidden`;
+        customInput.style.display = 'none';
+
+        // Handle custom option selection
+        select.addEventListener('change', () => {
+            if (select.value === 'custom') {
+                // Hide select, show custom input
+                select.style.display = 'none';
+                customInput.style.display = 'block';
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            }
+            validateInputs(); // Re-validate when selection changes
+        });
+
+        // Handle custom input blur - switch back to select if empty
+        customInput.addEventListener('blur', () => {
+            if (!customInput.value.trim()) {
+                customInput.style.display = 'none';
+                customInput.classList.add('hidden');
+                select.style.display = 'block';
+                select.value = '';
+            }
+        });
+
+        // If the selected value is not in predefined options, set it as custom
+        const isPredefineValue = API_PATHS.some(path => path.value === selectedValue);
+        if (selectedValue && !isPredefineValue) {
+            select.value = 'custom';
+            customInput.value = selectedValue;
+            select.style.display = 'none';
+            customInput.style.display = 'block';
+            customInput.classList.remove('hidden');
+        }
+
+        // Create wrapper that can be treated as a single element
+        const wrapper = document.createElement('div');
+        wrapper.className = 'position-relative';
+        wrapper.style.flex = '0 0 250px'; // Fixed width for consistency
+        wrapper.appendChild(select);
+        wrapper.appendChild(customInput);
+        
+        // Add references for easy access
+        wrapper.select = select;
+        wrapper.customInput = customInput;
+
+        return wrapper;
+    }
+
+    function getKeyValue(keyContainer) {
+        if (keyContainer.select.value === 'custom') {
+            return keyContainer.customInput.value.trim();
+        }
+        return keyContainer.select.value;
     }
 
     function createDeleteButton(onClickAction) {
         const button = document.createElement('button');
-        button.textContent = 'Del';
-        button.className = 'btn btn-danger btn-sm py-1 px-2 text-xs w-14 flex-shrink-0'; // Fixed width
+        button.innerHTML = '×'; // Use × symbol
+        button.className = 'btn btn-outline-danger';
+        button.type = 'button';
+        button.title = 'Delete this API path configuration'; // Add tooltip
+        button.style.minWidth = '50px'; // Ensure consistent width
+        button.style.height = '38px'; // Match standard input height
         button.addEventListener('click', onClickAction);
         return button;
     }
@@ -244,10 +368,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addKeyValuePairRow(key = '', value = '') {
         const itemContainer = document.createElement('div');
-        itemContainer.className = 'key-value-item'; // flex items-center space-x-3 mb-3
+        itemContainer.className = 'api-path-item mb-3 p-3 border rounded bg-white'; 
 
-        const keyInput = createTextInput('Key', key, 'flex-1');
-        const valueInput = createTextInput('Value', value, 'flex-1');
+        // Create input group container
+        const inputGroup = document.createElement('div');
+        inputGroup.className = 'input-group';
+
+        // Create API path dropdown
+        const keyInput = createApiPathSelect(key, '');
+        
+        // Create mock instruction input
+        const valueInput = createTextInput('status=230, dynamic=true, timeout=5s', value, '');
+
+        // Create delete button
         const deleteButton = createDeleteButton(() => {
             itemContainer.remove();
             // Remove from the internal array as well
@@ -256,17 +389,20 @@ document.addEventListener('DOMContentLoaded', () => {
             updateNoKeyValuePairsMessageVisibility(); // Update message
         });
 
-        itemContainer.appendChild(keyInput);
-        itemContainer.appendChild(valueInput);
-        itemContainer.appendChild(deleteButton);
+        // Add elements to input group
+        inputGroup.appendChild(keyInput);
+        inputGroup.appendChild(valueInput);
+        inputGroup.appendChild(deleteButton);
 
+        itemContainer.appendChild(inputGroup);
         mockHeaderKeyValuePairsContainer.appendChild(itemContainer);
 
         // Store reference to inputs for later retrieval and validation
         mockHeaderKeyValuePairs.push({ keyInput, valueInput, itemContainer });
 
         // Add event listeners for immediate validation feedback on input change
-        keyInput.addEventListener('input', validateInputs);
+        keyInput.select.addEventListener('change', validateInputs);
+        keyInput.customInput.addEventListener('input', validateInputs);
         valueInput.addEventListener('input', validateInputs);
         updateNoKeyValuePairsMessageVisibility(); // Update message
     }

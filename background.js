@@ -52,19 +52,31 @@ function matchUrlPattern(url, patterns) {
 function formatXMockHeaderName(suffix) {
     const MOCK_HEADER_PREFIX = "x-ov-mock";
     if (!suffix || suffix.trim() === '') {
-        return MOCK_HEADER_PREFIX;
+        return MOCK_HEADER_PREFIX.toLowerCase();
     }
-    const cleanSuffix = suffix.trim();
+    const cleanSuffix = suffix.trim().toLowerCase(); // Ensure suffix is lowercase
     // Add hyphen only if suffix is not empty AND doesn't start with a hyphen
-    return MOCK_HEADER_PREFIX + (cleanSuffix && !cleanSuffix.startsWith('-') ? '-' : '') + cleanSuffix;
+    const headerName = MOCK_HEADER_PREFIX + (cleanSuffix && !cleanSuffix.startsWith('-') ? '-' : '') + cleanSuffix;
+    return headerName.toLowerCase(); // Ensure entire header name is lowercase
 }
 
 // Helper function to format the x-ov-mock header value
 function formatXMockHeaderValue(pairs) {
-    return (pairs || [])
+    const formattedPairs = (pairs || [])
         .filter(pair => pair.key.trim() !== '') // Only include pairs with non-empty keys
-        .map(pair => `${pair.key.trim()}=${pair.value.trim()}`)
-        .join(';');
+        .map(pair => {
+            const apiPath = pair.key.trim();
+            let mockInstruction = pair.value.trim();
+            
+            // Transform status= to code= for server compatibility
+            mockInstruction = mockInstruction.replace(/\bstatus\s*=/gi, 'code=');
+            
+            // Format as: API_PATH | Prefer MOCK_INSTRUCTIONS
+            return `${apiPath} | Prefer ${mockInstruction}`;
+        })
+        .join(' ::: '); // Use conspicuous triple colon separator with spaces
+    
+    return formattedPairs;
 }
 
 async function updateDynamicHeaderRules() {
@@ -100,6 +112,9 @@ async function updateDynamicHeaderRules() {
         const finalMockHeaderValue = formatXMockHeaderValue(settings.mockHeaderKeyValuePairs);
 
         if (finalMockHeaderName && finalMockHeaderValue) {
+            // Get the selected HTTP method from settings, default to 'post'
+            const selectedMethod = settings.httpMethod || 'post';
+            
             rulesToAdd.push({
                 id: ruleIdCounter++,
                 priority: 1,
@@ -115,7 +130,7 @@ async function updateDynamicHeaderRules() {
                 },
                 condition: {
                     urlFilter: settings.targetUrl, // Apply to your GraphQL endpoint
-                    requestMethods: ["post"],      // Only for POST requests
+                    requestMethods: [selectedMethod.toLowerCase()], // Use selected method
                     resourceTypes: ["xmlhttprequest", "main_frame", "sub_frame", "other"] // Cover common request types
                 }
             });
@@ -191,8 +206,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 // logic that doesn't involve header injection (e.g., logging or other actions).
 // It does NOT affect the declarativeNetRequest header injection.
 chrome.webRequest.onBeforeRequest.addListener(
-    (details) => {
-        if (details.method === "POST" && details.requestBody && details.requestBody.raw) {
+    async (details) => {
+        // Get current settings to check the selected HTTP method
+        const result = await chrome.storage.local.get(['settingsV1']);
+        const settings = result.settingsV1;
+        const selectedMethod = (settings?.httpMethod || 'post').toUpperCase();
+        
+        if (details.method === selectedMethod && details.requestBody && details.requestBody.raw) {
             try {
                 const rawBody = details.requestBody.raw[0].bytes;
                 const decodedBody = new TextDecoder("utf-8").decode(new Uint8Array(rawBody));

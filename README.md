@@ -1,49 +1,62 @@
 # Custodian API Mock Driver
 
-A Chrome extension designed to simplify **mocking custodian APIs for the purpose of testing and demos** by allowing you to inject custom HTTP request headers into GraphQL POST requests. It's particularly useful for development, QA, and debugging workflows.
+A Chrome extension for **mocking custodian APIs during testing and demos** by injecting custom `x-ov-mock` headers into HTTP requests to GraphQL endpoints.
+
+<img src="./ui-images/mock-driver-ui-full.png">
 
 ## Features
 
--   **Custom `x-ov-mock` Header Injection**: Dynamically injects a configurable `x-ov-mock-YOUR_SUFFIX` header into matching requests. The header's value is constructed from user-defined semicolon-separated `key=value` pairs (e.g., `key1=value1;key2=value2`).
--   **Target URL Specificity**: Headers are only injected into requests sent to a user-defined GraphQL server URL.
--   **Tab URL Restriction**: Optionally restrict header injection to requests originating from browser tabs whose URLs match specific patterns (e.g., `https://*.atbprosper.com/*`, `your-internal-dashboard.com`).
--   **Enable/Disable Toggle**: Easily activate or deactivate the extension's overall functionality directly from the popup UI.
+- **Custom Header Injection**: Injects configurable `x-ov-mock-{suffix}` headers into requests
+- **API Path Dropdown**: Choose from predefined API paths or enter custom ones
+- **HTTP Method Support**: Works with both POST and GET requests
+- **URL Targeting**: Only affects requests to specified GraphQL server URLs
+- **Tab Restrictions**: Optionally limit to specific browser tab URL patterns
+- **Auto-formatting**: Converts user-friendly formats (e.g., `status=230` → `code=230`)
 
-## Installation
+## Example
 
-1.  Clone this repository or download the source code.
-2.  Open Chrome and navigate to `chrome://extensions/`.
-3.  Enable "Developer mode" in the top right corner.
-4.  Click "Load unpacked" and select the extension directory.
+With suffix `atb-api` and API pairs:
+- `dashboard/transactions/pac` → `status=230, dynamic=true`
+- `dashboard/holdings` → `status=500, timeout=2s`
+
+The injected header becomes:
+```http
+x-ov-mock-atb-api: dashboard/transactions/pac | Prefer code=230, dynamic=true ::: dashboard/holdings | Prefer code=500, timeout=2s
+```
 
 ## Configuration
 
-All extension settings are managed directly through its popup user interface and are automatically saved in Chrome's local storage.
+Configure the extension through its popup interface:
 
--   **Target GraphQL URL**: Specify the exact URL of the GraphQL server where you want headers to be sent to (e.g., `https://api.example.com/graphql`).
--   **x-ov-mock Header Suffix**: Define the suffix for your custom header. For instance, entering `atb-api` will result in the header `x-ov-mock-atb-api`.
--   **Key/Value Pairs**: Add multiple key-value pairs (`key` and `value` fields) that will be combined to form the content of your `x-ov-mock` header (e.g., `env=dev;version=v2`).
--   **Restrict to Specific Tab URLs**: Enable this option and provide a list of URL patterns (one per line). Headers will only be injected for requests originating from browser tabs whose URLs match any of these patterns.
+- **Target Server**: Specify the GraphQL endpoint URL and HTTP method (POST/GET)
+- **Header Suffix**: Define the suffix for `x-ov-mock-{suffix}` headers
+- **API Path Pairs**: Select API paths and provide mock instructions
+- **Tab URL Restrictions**: Optionally limit to specific tab URL patterns
 
-### Example of an Injected Header
+### Available API Paths
 
-If your configuration sets the `x-ov-mock` header suffix to `atb-api` and includes key-value pairs like `operation=deposit-transfer` and `scenario=risk-challenge`, an outbound request might look something like this:
+Common predefined paths include:
+- Account management (`dashboard/account`, `dashboard/accounts`)
+- Balance history (`dashboard/balanceHistory/account`, `dashboard/balanceHistory/client`)
+- Banking (`dashboard/bankAccount`, `dashboard/beneficiaries`)
+- Communications (`dashboard/CommunicationPreference`)
+- Documents (`dashboard/documents`, `dashboard/documentNotifications`)
+- Holdings (`dashboard/holdings`)
+- Transactions (`dashboard/transactions`, `dashboard/transactions/pac`)
+- User profiles (`profiles/user/roles`, `profiles/risk/answers`)
 
-```http
-POST /graphql HTTP/1.1
-Host: [api.example.com](https://www.google.com/search?q=api.example.com)
-Content-Type: application/json
-x-ov-mock-atb-api: operation=deposit-transfer;scenario=risk-challenge
-// ... other standard HTTP headers
-// ... request body (e.g., GraphQL query)
-```
+### Mock Instructions
 
-### Expectation
+Use user-friendly formats:
+- **Status codes**: `status=230` (auto-converted to `code=230`)
+- **Dynamic responses**: `dynamic=true`
+- **Timeouts**: `timeout=5s`
+- **Combined**: `status=201, dynamic=true, timeout=3s`
 
-The expectation is that the request will be forwarded to the GraphQL server at `https://api.example.com/graphql` and the `x-ov-mock-atb-api` header will be added to the request. The value of the header will be `operation=deposit-transfer;scenario=risk-challenge`. 
+## Usage
 
-Ideally, our infra and gateways should be made to accept this header (or variations of it) such that when the request hits the custodian package (e.g ov-atb) via the ci-trading-service, the custodian package can route the related 3rd party request to a mock server that handles the `operation=deposit-transfer` and `scenario=risk-challenge` scenarios appropriately by returning a mocked response using the custodians OpenAPI spec. 
+The extension forwards requests to your GraphQL server with the mock header attached. Your infrastructure can then route matching requests to appropriate mock servers based on the header values.
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request if you have any suggestions or improvements.
+Contributions welcome! Please open an issue or submit a pull request.

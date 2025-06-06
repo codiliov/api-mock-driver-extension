@@ -10,15 +10,32 @@
         body {
             font-family: sans-serif; /* Bootstrap's default font-family */
             width: 700px; /* Increased width for more horizontal space */
-            padding: 20px; /* Increased padding */
+            min-height: 600px; /* Minimum height for better use of space */
+            max-height: 90vh; /* Use up to 90% of viewport height */
+            padding: 16px; /* Reduced padding for more content space */
             background-color: #f8f9fa; /* Light gray background, typical Bootstrap shade */
+            margin: 0; /* Remove default margins */
+            overflow-y: auto; /* Allow scrolling if content exceeds max-height */
         }
+
+        /* Optimize container for better space usage */
+        .main-container {
+            min-height: calc(100vh - 32px); /* Use full height minus padding */
+            margin: 0; /* Remove vertical margins that waste space */
+            padding: 16px; /* Reduce padding */
+        }
+
         .section-title {
             font-size: 1.25rem; /* h5 equivalent */
             font-weight: 600; /* semi-bold */
-            margin-top: 28px;
-            margin-bottom: 16px;
+            margin-top: 20px; /* Reduced from 28px */
+            margin-bottom: 12px; /* Reduced from 16px */
             color: #343a40; /* dark gray */
+        }
+
+        /* Reduce first section title margin */
+        .section-title:first-of-type {
+            margin-top: 0;
         }
         .error-message {
             color: #dc3545; /* Bootstrap's danger color */
@@ -30,7 +47,7 @@
         .toggle-switch {
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px; /* Reduced from 20px */
         }
         .toggle-switch label {
             margin-right: 16px;
@@ -80,15 +97,160 @@
         .key-value-item input:last-of-type {
             margin-right: 0; /* No margin on the last input before the button */
         }
+
+        /* API Path Container Styling */
+        .api-path-container {
+            position: relative;
+        }
+        
+        .api-path-container .form-select {
+            width: 100%;
+        }
+        
+        .api-path-container .form-control {
+            width: 100%;
+        }
+
+        /* Key-Value item layout improvements */
+        .key-value-item {
+            gap: 0.5rem;
+        }
+        
+        .key-value-item .api-path-container {
+            min-width: 200px;
+            max-width: 300px;
+        }
+
+        /* API Path Item Styling - Input group layout */
+        .api-path-item {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .api-path-item:hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        /* Ensure proper alignment in input groups */
+        .api-path-item .input-group {
+            align-items: stretch;
+        }
+
+        .api-path-item .input-group .position-relative {
+            display: flex;
+            align-items: stretch;
+        }
+
+        .api-path-item .input-group .form-control {
+            height: 38px;
+            border-radius: 0; /* Only apply flat border-radius to text inputs */
+        }
+
+        .api-path-item .input-group .form-select {
+            height: 38px;
+            /* Keep default border-radius for select elements to maintain dropdown appearance */
+        }
+
+        .api-path-item .input-group .form-select:first-child,
+        .api-path-item .input-group .form-control:first-child {
+            border-top-left-radius: 0.375rem;
+            border-bottom-left-radius: 0.375rem;
+        }
+
+        .api-path-item .input-group .btn:last-child {
+            border-top-right-radius: 0.375rem;
+            border-bottom-right-radius: 0.375rem;
+        }
+
+        /* Ensure consistent borders */
+        .api-path-item .input-group > *:not(:last-child) {
+            border-right: 0;
+        }
+
+        .api-path-item .input-group > *:not(:first-child) {
+            border-left: 0;
+        }
+
+        /* Input group button styling */
+        .api-path-item .input-group .btn {
+            border-color: #ced4da;
+        }
+
+        /* Custom positioning for select/input switcher */
+        .api-path-item .position-relative {
+            flex: 0 0 auto;
+        }
+
+        /* Optimize API path pairs container for better space usage */
+        #mockHeaderKeyValuePairsContainer {
+            max-height: 400px; /* Allow more vertical space for API pairs */
+            overflow-y: auto; /* Internal scrolling for many pairs */
+        }
+
+        /* Reduce spacing between form elements */
+        .mb-3 {
+            margin-bottom: 1rem !important; /* Reduced from default 1.5rem */
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 576px) {
+            .api-path-item .input-group {
+                flex-direction: column;
+            }
+            
+            .api-path-item .input-group .form-select,
+            .api-path-item .input-group .form-control,
+            .api-path-item .input-group .btn {
+                border-radius: 0.375rem !important;
+                border: 1px solid #ced4da !important;
+                margin-bottom: 0.25rem;
+            }
+            
+            .api-path-item .input-group .btn:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        /* Responsive adjustments for larger screens */
+        @media (min-height: 800px) {
+            body {
+                min-height: 700px; /* Use more height on large screens */
+                max-height: 95vh; /* Use up to 95% of viewport height */
+            }
+            
+            #mockHeaderKeyValuePairsContainer {
+                max-height: 500px; /* More space for API pairs on large screens */
+            }
+        }
+
+        @media (min-height: 1000px) {
+            body {
+                min-height: 800px; /* Even more height on very large screens */
+            }
+            
+            #mockHeaderKeyValuePairsContainer {
+                max-height: 600px; /* Maximum space for API pairs */
+            }
+        }
     </style>
 </head>
 <body class="bg-light">
-    <div class="container bg-white p-4 rounded shadow-lg my-4">
-        <h1 class="text-center mb-4 text-dark fs-3 fw-bold">REST API Mock Driver</h1>
+    <div class="main-container bg-white rounded shadow-lg">
+        <h1 class="text-center mb-3 text-dark fs-3 fw-bold">Custodian API Mock Driver</h1>
 
         <div class="mb-3">
-            <label for="targetUrl" class="form-label text-dark">Target GraphQL Server:</label>
-            <input type="url" id="targetUrl" class="form-control" placeholder="https://api.example.com/graphql">
+            <label for="targetUrl" class="form-label text-dark">Target Server:</label>
+            <div class="input-group mb-3">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="httpMethodDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    POST
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" data-method="post">POST</a></li>
+                    <li><a class="dropdown-item" href="#" data-method="get">GET</a></li>
+                </ul>
+                <input type="url" id="targetUrl" class="form-control" placeholder="https://api.example.com/graphql" aria-label="Target server URL">
+                <input type="hidden" id="httpMethod" value="post">
+            </div>
             <p id="targetUrlError" class="error-message hidden">Please enter a valid URL.</p>
         </div>
 
@@ -99,26 +261,33 @@
         </div>
         <div class="mb-3">
             <label for="tabUrlPatterns" class="form-label text-dark">Allowed Tab URLs (one per line):</label>
-            <textarea id="tabUrlPatterns" rows="6" class="form-control" placeholder="https://*.atbprosper.com*&#10;https://my-saas.com/app/*&#10;example.com"></textarea>
+            <textarea id="tabUrlPatterns" rows="3" class="form-control" placeholder="https://*.atbprosper.com*&#10;https://my-saas.com/app/*&#10;example.com"></textarea>
             <p id="tabUrlPatternsError" class="error-message hidden">Some URLs are invalid or patterns are malformed.</p>
         </div>
 
-        <h2 class="section-title">x-ov-mock Header Configuration</h2>
+        <h2 class="section-title">Header Configuration</h2>
         <div class="mb-3">
-            <label for="mockHeaderSuffix" class="form-label text-dark">x-ov-mock-</label>
-            <input type="text" id="mockHeaderSuffix" class="form-control" placeholder="atb-demo (e.g, for x-ov-mock-atb-demo)">
+            <label for="mockHeaderSuffix" class="form-label text-dark">x-ov-mock Header Suffix:</label>
+            <div class="input-group mb-3">
+                <span class="input-group-text">x-ov-mock-</span>
+                <input type="text" class="form-control" id="mockHeaderSuffix" placeholder="atb-demo" aria-describedby="mock-header-addon">
+            </div>
         </div>
 
-        <h3 class="font-weight-bold text-dark mb-3 fs-6">Key/Value Pairs for x-ov-mock Header Value:</h3>
-        <div id="mockHeaderKeyValuePairsContainer" class="border p-3 rounded bg-light mb-3">
-            <p class="text-muted small fst-italic" id="noKeyValuePairsMessage">Add key-value pairs below.</p>
+        <h3 class="font-weight-bold text-dark mb-3 fs-6">API Path / Mock Instruction Pairs for x-ov-mock Header Value:</h3>
+        <div class="mb-3">
+            <label class="form-label text-dark">API Path & Mock Instruction Pairs:</label>
+            <div id="mockHeaderKeyValuePairsContainer" class="border p-3 rounded bg-light">
+                <p class="text-muted small fst-italic" id="noKeyValuePairsMessage">Add API path and mock instruction pairs below.</p>
+            </div>
         </div>
-        <button id="addKeyValuePair" class="btn btn-secondary btn-sm">Add Header Value Key / Value Pair</button>
-        <p id="keyValuePairsError" class="error-message hidden">All keys must be unique, non-empty, and contain only alphanumeric, hyphens, or underscores.</p>
+        <button id="addKeyValuePair" class="btn btn-secondary btn-sm">Add API Path / Mock Instruction Pair</button>
+        <p id="keyValuePairsError" class="error-message hidden">All API paths must be selected and unique.</p>
 
         <button id="saveSettings" class="btn btn-primary w-100 mt-4 py-3">Save Settings</button>
     </div>
 
+    <script src="./lib/js/bootstrap.bundle.min.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>
